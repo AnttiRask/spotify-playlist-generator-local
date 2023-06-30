@@ -1,11 +1,13 @@
 # Load packages
 library(conflicted)
+library(dplyr)
+library(ggplot2)
 library(ggrepel)
-library(shiny)
+library(purrr)
 library(shinydashboard)
-library(shinythemes)
 library(spotifyr)
-library(tidyverse)
+library(stringr)
+library(tidyr)
 
 # Server
 server <- function(input, output, session) {
@@ -229,7 +231,7 @@ server <- function(input, output, session) {
         # Create an empty playlist
         playlist_id <- create_playlist(
             user_id       = input$user_id,
-            name          = str_glue("My Happy and Energetic Songs ({Sys.Date()})"),
+            name          = str_glue("{input$playlist_name} ({Sys.Date()})"),
             description   = "Generated with R!",
             authorization = get_authorized("playlist-modify-public")
         )$id

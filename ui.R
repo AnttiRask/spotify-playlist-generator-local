@@ -1,11 +1,7 @@
 # Load packages
 library(conflicted)
-library(ggrepel)
-library(shiny)
 library(shinydashboard)
 library(shinythemes)
-library(spotifyr)
-library(tidyverse)
 
 # Define UI
 fluidPage(
@@ -76,6 +72,7 @@ fluidPage(
                 numericInput("num_top_artists", "Number of top artists (1-5):", min = 1, max = 5, value = 5),
                 numericInput("energy", "Minimum energy (0-1):", min = 0, max = 1, value = 0.6),
                 numericInput("valence", "Minimum valence (0-1):", min = 0, max = 1, value = 0.6),
+                textInput("playlist_name", "Playlist Name: "),
                 actionButton("generate", "Generate Playlist")
             ),
             mainPanel(
