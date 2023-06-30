@@ -1,0 +1,20 @@
+#sentiment_text, #most_sentiment {
+    font-size: 30px;
+    color: white;
+    display: block;
+    text-align: center;
+    padding-bottom: 10px;
+}
+
+#energy_vs_positivity, #speechiness_vs_danceability {
+    font-size: 40px;
+    color: Yellow;
+    display: block;
+    text-align: center;
+    padding-top: 25px;
+    padding-bottom: 10px;
+}
+
+p { 
+    color: white;
+}
