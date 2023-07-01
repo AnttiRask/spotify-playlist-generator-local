@@ -1,4 +1,38 @@
+/* Fonts */
+@import url("https://fonts.cdnfonts.com/css/gotham-6");
+
+body {
+    font-family: "Gotham", sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: "Gotham", sans-serif;
+}
+
+input {
+    font-family: "Gotham", sans-serif;
+}
+
+p { 
+    font-family: "Gotham", sans-serif;
+    color: white;
+}
+
+.title {
+    color: #1DB954;
+}
+
+/* Navbar */
+.fa-spotify .navbar-brand {
+    color:#1DB954;
+}
+
+/* Main */
 .container-fluid {
+    background-color: #191414;
+}
+
+.html {
     background-color: #191414;
 }
 
@@ -22,8 +56,4 @@
     text-align: center;
     padding-top: 25px;
     padding-bottom: 10px;
-}
-
-p { 
-    color: white;
 }

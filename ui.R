@@ -14,15 +14,23 @@ fluidPage(
     navbarPage(
         
         # Application title
-        "Spotify Playlist Generator",
+        title = list(
+            icon(
+                "spotify",
+                lib = "font-awesome"
+            ),
+            "Spotify Playlist Generator"
+        ),
         
         # Authentication tab
         tabPanel(
             "Intro",
             sidebarPanel(
                 h3("Input:"),
+                br(),
                 textInput("client_id", "Client ID: ", ""),
                 passwordInput("client_secret", "Client Secret: ", ""),
+                br(),
                 actionButton("btn", "Validate"),
                 br(),
                 br(),
@@ -46,21 +54,18 @@ fluidPage(
         # Summary Insights tab
         tabPanel(
             "Summary Insights",
-            sidebarLayout(
-                sidebarPanel(
+            div(
+                class = "plot-center",
+                mainPanel(
+                    plotOutput("summary_plot", height = 700), # Summary insights plot output
                     selectInput(
                         "feature",
                         "Select a feature to view:",
                         choices  = features,  # 'features' is the vector of feature names from your global.R file
                         selected = "energy"
-                    )
-                ),
-                div(
-                    class = "plot-center",
-                    mainPanel(plotOutput("summary_plot", height = 700) # Summary insights plot output
-                    )
+                    ),
                 )
-            ),
+            )
         ),
         
         # Top Artists tab
@@ -100,6 +105,7 @@ fluidPage(
                 sliderInput("instrumentalness", "Instrumentalness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
                 sliderInput("speechiness", "Speechiness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
                 sliderInput("valence", "Valence (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
+                br(),
                 actionButton("generate", "Generate Playlist")
             ),
             mainPanel(
