@@ -1,4 +1,4 @@
-# The function for getting the Spotify authorization code
+# For getting the Spotify authorization code
 get_authorized <- function(.scope) {
     
     get_spotify_authorization_code(

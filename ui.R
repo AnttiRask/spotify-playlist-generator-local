@@ -1,7 +1,11 @@
 # Load packages
 library(conflicted)
+library(purrr)
 library(shinydashboard)
 library(shinythemes)
+library(stringr)
+
+source("scripts/global.R", local = TRUE)
 
 # Define UI
 fluidPage(
@@ -42,42 +46,65 @@ fluidPage(
         # Summary Insights tab
         tabPanel(
             "Summary Insights",
-            mainPanel(
-                plotOutput("summary_plot") # Summary insights plot output
-            )
+            sidebarLayout(
+                sidebarPanel(
+                    selectInput(
+                        "feature",
+                        "Select a feature to view:",
+                        choices  = features,  # 'features' is the vector of feature names from your global.R file
+                        selected = "energy"
+                    )
+                ),
+                div(
+                    class = "plot-center",
+                    mainPanel(plotOutput("summary_plot", height = 700) # Summary insights plot output
+                    )
+                )
+            ),
         ),
         
         # Top Artists tab
         tabPanel(
             "Top Artists",
-            mainPanel(
-                plotOutput("artists_plot") # Top artists plot output
+            div(
+                class = "plot-center",
+                mainPanel(plotOutput("artists_plot", height = 700) # Top artists plot output
+                )
             )
         ),
         
         # Top Tracks tab
         tabPanel(
             "Top Tracks",
-            mainPanel(
-                plotOutput("tracks_plot") # Top tracks plot output
+            div(
+                class = "plot-center",
+                mainPanel(plotOutput("tracks_plot", height = 700) # Top tracks plot output
+                )
             )
         ),
-
+        
         # Playlist Generator tab
         tabPanel(
             "Playlist Generator",
             sidebarPanel(
                 h3("Input:"),
+                br(),
                 textInput("user_id", "Spotify Username: ", ""),
                 numericInput("num_top_artists", "Number of top artists (1-5):", min = 1, max = 5, value = 5),
-                numericInput("energy", "Minimum energy (0-1):", min = 0, max = 1, value = 0.6),
-                numericInput("valence", "Minimum valence (0-1):", min = 0, max = 1, value = 0.6),
                 textInput("playlist_name", "Playlist Name: "),
+                hr(),
+                h4("Targets:"),
+                sliderInput("acousticness", "Acousticness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
+                sliderInput("danceability", "Danceability (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
+                sliderInput("energy", "Energy (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
+                sliderInput("instrumentalness", "Instrumentalness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
+                sliderInput("speechiness", "Speechiness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
+                sliderInput("valence", "Valence (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
                 actionButton("generate", "Generate Playlist")
             ),
             mainPanel(
                 uiOutput("playlist_link")
             )
         )
-    ) 
+    )
 )

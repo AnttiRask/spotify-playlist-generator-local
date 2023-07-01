@@ -33,7 +33,7 @@ theme_spotify <- function(){
     color.text.2     = spotify_colors$light_green
     color.axis       = spotify_colors$white
     
-    theme_bw(base_size = 13, base_family = "Gotham") +
+    theme_bw(base_size = 20, base_family = "Gotham") +
         
         theme(
             # Axis

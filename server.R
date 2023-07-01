@@ -82,27 +82,27 @@ server <- function(input, output, session) {
         req(input$btn)
         
         my_album_summary_stats <- my_artists_track_features() %>%
-        summarise(
-            across(where(is.numeric), mean),
-            tracks = n(),
-            .by    = c(artist_name, album_release_year, album_name)
-        ) %>% 
-        filter(
-            liveness < 0.29,
-            str_detect(tolower(album_name), "edition") == FALSE
-        ) %>%
-        mutate(
-            album_number = row_number(album_release_year),
-            .by = artist_name
-        ) %>%
-        pivot_longer(
-            cols      = !c(artist_name, album_release_year, album_name, album_number),
-            names_to  = "feature",
-            values_to = "score"
-        ) %>% 
-        filter(
-            feature %in% features
-        )
+            summarise(
+                across(where(is.numeric), mean),
+                tracks = n(),
+                .by    = c(artist_name, album_release_year, album_name)
+            ) %>% 
+            filter(
+                liveness < 0.29,
+                str_detect(tolower(album_name), "edition") == FALSE
+            ) %>%
+            mutate(
+                album_number = row_number(album_release_year),
+                .by = artist_name
+            ) %>%
+            pivot_longer(
+                cols      = !c(artist_name, album_release_year, album_name, album_number),
+                names_to  = "feature",
+                values_to = "score"
+            ) %>% 
+            filter(
+                feature %in% features
+            )
         
         return(my_album_summary_stats)
         
@@ -112,19 +112,18 @@ server <- function(input, output, session) {
     output$summary_plot <- renderPlot({
         
         my_album_summary_stats() %>% 
+            filter(feature == input$feature) %>%
             ggplot(aes(album_number, score, color = artist_name)) + 
             geom_line() +
             geom_point() +
-            facet_wrap(
-                vars(feature),
-                ncol = 2,
-                scales = "free_y"
-            ) +
             labs(
-                x = "Album #",
-                y = "Score"
+                color = "Artist",
+                title = str_to_title(input$feature),
+                x     = "Album #",
+                y     = "Score"
             ) +
-            theme_classic()
+            scale_color_manual(values = monokai_palette) +
+            theme_spotify()
     })
     
     # Top Artists ----
@@ -143,13 +142,7 @@ server <- function(input, output, session) {
                 names_to  = "feature",
                 values_to = "score"
             ) %>% 
-            filter(
-                feature %in% c(
-                    "danceability",
-                    "energy",
-                    "valence"
-                )
-            ) %>%
+            filter(feature %in% features) %>%
             ggplot(aes(feature %>% str_to_title(), score, color = artist_name)) +
             geom_boxplot(
                 fill      = spotify_colors$black,
@@ -157,9 +150,9 @@ server <- function(input, output, session) {
             ) +
             labs(
                 color = "Artist",
-                title = "Artists' Average Scores on Music Features",
+                title = "Average Values of the Features (0-1)",
                 x     = NULL,
-                y     = "Score"
+                y     = NULL
             ) +
             scale_color_manual(values = monokai_palette) +
             theme_spotify()
@@ -195,17 +188,25 @@ server <- function(input, output, session) {
             ) + 
             geom_hline(yintercept = 0.5,  color = "grey", linetype = "dashed") +
             geom_vline(xintercept = 0.5,  color = "grey", linetype = "dashed") +
-            annotate("text", 0.25 / 2, 1, label = "Hopeful Ballads",  fontface = "italic") +
-            annotate("text", 1.75 / 2, 1, label = "Vibrant Cheerful", fontface = "italic") +
-            annotate("text", 1.75 / 2, 0, label = "Vibrant Enraged",  fontface = "italic") +
-            annotate("text", 0.25 / 2, 0, label = "Sad Ballads",      fontface = "italic") +
+            annotate(
+                "text", 0.25 / 2, 1, label = "Hopeful Ballads",  fontface = "italic", color = "#FFFFFF") +
+            annotate(
+                "text", 1.75 / 2, 1, label = "Vibrant Cheerful", fontface = "italic", color = "#FFFFFF") +
+            annotate(
+                "text", 1.75 / 2, 0, label = "Vibrant Enraged",  fontface = "italic", color = "#FFFFFF") +
+            annotate(
+                "text", 0.25 / 2, 0, label = "Sad Ballads", fontface = "italic", color = "#FFFFFF") +
             labs(
                 x     = "Energy",
                 y     = "Valence",
                 color = "Artist",
                 title = "Songs mood"
             ) +
-            theme_classic()
+            scale_color_manual(values = monokai_palette) +
+            theme_spotify() +
+            theme(
+                panel.grid.major = element_blank()
+            )
     })
     
     # Playlist Generator ----
@@ -222,10 +223,14 @@ server <- function(input, output, session) {
         )
         
         # Get song recommendations
-        my_happy_and_energetic_songs <- get_recommendations(
-            seed_artists = head(my_top_artists, input$num_top_artists) %>% pull(id),
-            min_energy   = input$energy,
-            min_valence  = input$valence
+        new_playlist <- get_recommendations(
+            seed_artists            = head(my_top_artists, input$num_top_artists) %>% pull(id),
+            target_acousticness     = input$acousticness,
+            target_danceability     = input$danceability,
+            target_energy           = input$energy,
+            target_instrumentalness = input$instrumentalness,
+            target_speechiness      = input$speechiness,
+            target_valence          = input$valence
         )
         
         # Create an empty playlist
@@ -239,7 +244,7 @@ server <- function(input, output, session) {
         # Populate the created playlist
         add_tracks_to_playlist(
             playlist_id   = playlist_id,
-            uris          = my_happy_and_energetic_songs$id,
+            uris          = new_playlist$id,
             authorization = get_authorized("playlist-modify-public")
         )
         
