@@ -43,9 +43,10 @@ server <- function(input, output, session) {
         
         # Fetch the top artists for the authenticated user
         my_artists <- get_my_top_artists_or_tracks(
-            limit = 2,
+            limit = 50,
             authorization = get_authorized("user-top-read")
-        ) %>% 
+        ) %>%
+            slice_sample(n = 2) %>% 
             pull(name)
         
         # Fetch the track features for the top artists

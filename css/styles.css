@@ -18,13 +18,9 @@ p {
     color: white;
 }
 
-.title {
-    color: #1DB954;
-}
-
 /* Navbar */
-.fa-spotify .navbar-brand {
-    color:#1DB954;
+.navbar-default .navbar-brand {
+    color: #1DB954 !important;
 }
 
 /* Main */
@@ -32,28 +28,17 @@ p {
     background-color: #191414;
 }
 
-.html {
-    background-color: #191414;
+.irs-bar {
+    border-top: 1px solid #1DB954 !important;
+    border-bottom: 1px solid #1DB954 !important;
+    background: #1DB954 !important;
+}
+
+.irs-single {
+    background-color: #1DB954 !important;
 }
 
 .plot-center {
     display: flex;
     justify-content: center;
-}
-
-#sentiment_text, #most_sentiment {
-    font-size: 30px;
-    color: white;
-    display: block;
-    text-align: center;
-    padding-bottom: 10px;
-}
-
-#energy_vs_positivity, #speechiness_vs_danceability {
-    font-size: 40px;
-    color: Yellow;
-    display: block;
-    text-align: center;
-    padding-top: 25px;
-    padding-bottom: 10px;
 }
