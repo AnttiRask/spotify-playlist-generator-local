@@ -1,6 +1,7 @@
 # Load packages
 library(conflicted)
 library(dplyr)
+library(forcats)
 library(ggplot2)
 library(ggrepel)
 library(purrr)
@@ -8,6 +9,7 @@ library(shinydashboard)
 library(spotifyr)
 library(stringr)
 library(tidyr)
+library(waiter)
 
 # Server
 server <- function(input, output, session) {
@@ -43,20 +45,19 @@ server <- function(input, output, session) {
         
         # Fetch the top artists for the authenticated user
         my_artists <- get_my_top_artists_or_tracks(
-            limit = 50,
+            limit         = 20,
             authorization = get_authorized("user-top-read")
         ) %>%
             slice_sample(n = 2) %>% 
             pull(name)
         
         # Fetch the track features for the top artists
-        my_artists_track_features <- bind_rows(
-            map(
-                my_artists,
-                get_artist_audio_features,
-                market = "US"
-            )
-        ) %>% 
+        my_artists_track_features <- map(
+            my_artists,
+            get_artist_audio_features,
+            market = "US"
+        ) %>%
+            bind_rows() %>% 
             select(
                 artist_id,
                 artist_name,
@@ -77,30 +78,75 @@ server <- function(input, output, session) {
         return(my_artists_track_features)
     })
     
-    my_album_summary_stats <- reactive({
+    # Average Features ----
+    output$artists_plot <- renderPlot({
         
-        # Ensure that this reactive is only executed when the 'Validate' button is clicked
-        req(input$btn)
+        # # Ensure that this reactive is only executed when the 'Validate' button is clicked
+        # req(input$btn)
+        
+        my_artists_track_features() %>%
+            select(
+                -c(
+                    track_name,
+                    album_release_year,
+                    album_name,
+                    track_id,
+                    artist_id
+                )
+            ) %>%
+            pivot_longer(
+                cols = !c(artist_name),
+                names_to        = "feature",
+                values_to       = "score",
+                names_transform = list(feature = as.factor)
+            ) %>% 
+            filter(feature %in% features) %>%
+            ggplot(aes(feature %>% str_to_title() %>% fct_rev(), score, color = artist_name)) +
+            geom_boxplot(
+                fill      = spotify_colors$black,
+                linewidth = 1
+            ) +
+            coord_flip() +
+            labs(
+                color = "Artist",
+                title = "Average Values of Different Features (0-1)",
+                x     = NULL,
+                y     = NULL
+            ) +
+            scale_color_manual(values = monokai_palette) +
+            theme_spotify() +
+            theme(
+                panel.grid.major.x = element_line(
+                    color     = spotify_colors$white,
+                    linewidth = 0.4,
+                    linetype  = 2
+                ),
+                panel.grid.major.y = element_blank(),
+                panel.grid.minor   = element_blank(),
+            )
+    })
+    
+    my_album_summary_stats <- reactive({
         
         my_album_summary_stats <- my_artists_track_features() %>%
             summarise(
                 across(where(is.numeric), mean),
-                tracks = n(),
                 .by    = c(artist_name, album_release_year, album_name)
-            ) %>% 
+            ) %>%
+            # Get rid off the live albums and/or special editions
             filter(
                 liveness < 0.29,
                 str_detect(tolower(album_name), "edition") == FALSE
             ) %>%
             mutate(
-                album_number = row_number(album_release_year),
+                album_number = row_number(),
                 .by = artist_name
             ) %>%
             pivot_longer(
                 cols      = !c(artist_name, album_release_year, album_name, album_number),
                 names_to  = "feature",
                 values_to = "score"
-            ) %>% 
+            ) %>%
             filter(
                 feature %in% features
             )
@@ -109,7 +155,7 @@ server <- function(input, output, session) {
         
     })
     
-    # Summary Insights ----
+    # Feature per Album ----
     output$summary_plot <- renderPlot({
         
         my_album_summary_stats() %>% 
@@ -119,48 +165,15 @@ server <- function(input, output, session) {
             geom_point() +
             labs(
                 color = "Artist",
-                title = str_to_title(input$feature),
+                title = str_glue("Average {str_to_title(input$feature)} per Album"),
                 x     = "Album #",
-                y     = "Score"
-            ) +
-            scale_color_manual(values = monokai_palette) +
-            theme_spotify()
-    })
-    
-    # Top Artists ----
-    output$artists_plot <- renderPlot({
-        
-        my_artists_track_features() %>% 
-            pivot_longer(
-                cols = !c(
-                    track_name,
-                    artist_name,
-                    album_release_year,
-                    album_name,
-                    track_id,
-                    artist_id
-                ),
-                names_to  = "feature",
-                values_to = "score"
-            ) %>% 
-            filter(feature %in% features) %>%
-            ggplot(aes(feature %>% str_to_title(), score, color = artist_name)) +
-            geom_boxplot(
-                fill      = spotify_colors$black,
-                linewidth = 1
-            ) +
-            labs(
-                color = "Artist",
-                title = "Average Values of the Features (0-1)",
-                x     = NULL,
                 y     = NULL
             ) +
             scale_color_manual(values = monokai_palette) +
             theme_spotify()
-        
     })
     
-    # Top Tracks ----
+    # Mood Quadrants ----
     output$tracks_plot <- renderPlot({
         
         top_tracks <- bind_rows(

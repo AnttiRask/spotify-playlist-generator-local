@@ -4,11 +4,13 @@ library(purrr)
 library(shinydashboard)
 library(shinythemes)
 library(stringr)
+library(waiter)
 
 source("scripts/global.R", local = TRUE)
 
 # Define UI
 fluidPage(
+    autoWaiter(),
     theme = shinytheme("cyborg"),
     includeCSS("css/styles.css"),
     navbarPage(
@@ -51,39 +53,39 @@ fluidPage(
             )
         ),
         
-        # Summary Insights tab
+        # Average Features tab
         tabPanel(
-            "Summary Insights",
+            "Average Features",
+            div(
+                class = "plot-center",
+                mainPanel(plotOutput("artists_plot", height = 700)
+                )
+            )
+        ),
+        
+        # Feature per Album tab
+        tabPanel(
+            "Feature per Album",
             div(
                 class = "plot-center",
                 mainPanel(
-                    plotOutput("summary_plot", height = 700), # Summary insights plot output
+                    plotOutput("summary_plot", height = 700),
                     selectInput(
                         "feature",
                         "Select a feature to view:",
-                        choices  = features,  # 'features' is the vector of feature names from your global.R file
+                        choices  = features,
                         selected = "energy"
                     ),
                 )
             )
         ),
         
-        # Top Artists tab
+        # Mood Quadrants tab
         tabPanel(
-            "Top Artists",
+            "Mood Quadrants",
             div(
                 class = "plot-center",
-                mainPanel(plotOutput("artists_plot", height = 700) # Top artists plot output
-                )
-            )
-        ),
-        
-        # Top Tracks tab
-        tabPanel(
-            "Top Tracks",
-            div(
-                class = "plot-center",
-                mainPanel(plotOutput("tracks_plot", height = 700) # Top tracks plot output
+                mainPanel(plotOutput("tracks_plot", height = 700)
                 )
             )
         ),
