@@ -4,6 +4,7 @@ library(dplyr)
 library(forcats)
 library(ggplot2)
 library(ggrepel)
+library(plotly)
 library(purrr)
 library(shinydashboard)
 library(spotifyr)
@@ -15,6 +16,7 @@ library(waiter)
 server <- function(input, output, session) {
     
     conflict_prefer("filter", "dplyr")
+    # conflict_prefer("layout", "plotly")
     
     options(httr_oauth_cache = FALSE) # Disable OAuth caching
     
@@ -180,7 +182,8 @@ server <- function(input, output, session) {
             map(unique(my_artists_track_features()$artist_id), get_artist_top_tracks)
         )
         
-        top_tracks %>% 
+        # Create a ggplot object
+        p <- top_tracks %>%
             select(id, popularity) %>%
             right_join(
                 my_artists_track_features(),
@@ -192,24 +195,8 @@ server <- function(input, output, session) {
             ) %>%
             ggplot(aes(energy, valence, color = artist_name)) +
             geom_point() +
-            geom_label_repel(
-                aes(
-                    label = case_when(
-                        rank_top_song <= 3 ~ track_name,
-                        TRUE ~ NA_character_
-                    )
-                )
-            ) + 
             geom_hline(yintercept = 0.5,  color = "grey", linetype = "dashed") +
             geom_vline(xintercept = 0.5,  color = "grey", linetype = "dashed") +
-            annotate(
-                "text", 0.25 / 2, 1, label = "Hopeful Ballads",  fontface = "italic", color = "#FFFFFF") +
-            annotate(
-                "text", 1.75 / 2, 1, label = "Vibrant Cheerful", fontface = "italic", color = "#FFFFFF") +
-            annotate(
-                "text", 1.75 / 2, 0, label = "Vibrant Enraged",  fontface = "italic", color = "#FFFFFF") +
-            annotate(
-                "text", 0.25 / 2, 0, label = "Sad Ballads", fontface = "italic", color = "#FFFFFF") +
             labs(
                 x     = "Energy",
                 y     = "Valence",
@@ -218,9 +205,23 @@ server <- function(input, output, session) {
             ) +
             scale_color_manual(values = monokai_palette) +
             theme_spotify() +
-            theme(
-                panel.grid.major = element_blank()
-            )
+            theme(panel.grid.major = element_blank())
+        
+        # Convert it to a plotly object
+        # p <- ggplotly(p)
+        
+        # Add annotations (quadrant labels) using layout
+        # p <- p %>%
+        #     plotly::layout(
+        #         annotations = list(
+        #             list(x = 1, y = 0, text = "Sad Bangers",   showarrow = FALSE),
+        #             list(x = 1, y = 1, text = "Happy Bangers", showarrow = FALSE),
+        #             list(x = 0, y = 1, text = "Happy Ballads", showarrow = FALSE),
+        #             list(x = 0, y = 0, text = "Sad Ballads",   showarrow = FALSE)
+        #         )
+        #     )
+        
+        return(p)
     })
     
     # Playlist Generator ----
