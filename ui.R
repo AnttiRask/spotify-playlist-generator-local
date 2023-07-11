@@ -1,5 +1,6 @@
 # Load packages
 library(conflicted)
+library(plotly)
 library(purrr)
 library(shinydashboard)
 library(shinythemes)
@@ -85,7 +86,7 @@ fluidPage(
             "Mood Quadrants",
             div(
                 class = "plot-center",
-                mainPanel(plotOutput("tracks_plot", height = 700)
+                mainPanel(plotlyOutput("tracks_plot", height = 700)
                 )
             )
         ),

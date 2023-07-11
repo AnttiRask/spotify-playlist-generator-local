@@ -83,9 +83,6 @@ server <- function(input, output, session) {
     # Average Features ----
     output$artists_plot <- renderPlot({
         
-        # # Ensure that this reactive is only executed when the 'Validate' button is clicked
-        # req(input$btn)
-        
         my_artists_track_features() %>%
             select(
                 -c(
@@ -163,8 +160,8 @@ server <- function(input, output, session) {
         my_album_summary_stats() %>% 
             filter(feature == input$feature) %>%
             ggplot(aes(album_number, score, color = artist_name)) + 
-            geom_line() +
-            geom_point() +
+            geom_line(linewidth = 1) +
+            geom_point(size = 4) +
             labs(
                 color = "Artist",
                 title = str_glue("Average {str_to_title(input$feature)} per Album"),
@@ -176,7 +173,7 @@ server <- function(input, output, session) {
     })
     
     # Mood Quadrants ----
-    output$tracks_plot <- renderPlot({
+    output$tracks_plot <- renderPlotly({
         
         top_tracks <- bind_rows(
             map(unique(my_artists_track_features()$artist_id), get_artist_top_tracks)
@@ -193,8 +190,16 @@ server <- function(input, output, session) {
                 rank_top_song = row_number(desc(popularity)),
                 .by = artist_name
             ) %>%
+            mutate(
+                label_text = str_glue(
+                    "{track_name}
+                    from {album_name} ({album_release_year})
+                    Energy: {round(energy, 2)}
+                    Valence: {round(valence, 2)}"
+                )
+            ) %>%
             ggplot(aes(energy, valence, color = artist_name)) +
-            geom_point() +
+            geom_point(aes(text = label_text), alpha = 0.9) +
             geom_hline(yintercept = 0.5,  color = "grey", linetype = "dashed") +
             geom_vline(xintercept = 0.5,  color = "grey", linetype = "dashed") +
             labs(
@@ -208,18 +213,81 @@ server <- function(input, output, session) {
             theme(panel.grid.major = element_blank())
         
         # Convert it to a plotly object
-        # p <- ggplotly(p)
+        p <- ggplotly(p, tooltip = "text")
         
         # Add annotations (quadrant labels) using layout
-        # p <- p %>%
-        #     plotly::layout(
-        #         annotations = list(
-        #             list(x = 1, y = 0, text = "Sad Bangers",   showarrow = FALSE),
-        #             list(x = 1, y = 1, text = "Happy Bangers", showarrow = FALSE),
-        #             list(x = 0, y = 1, text = "Happy Ballads", showarrow = FALSE),
-        #             list(x = 0, y = 0, text = "Sad Ballads",   showarrow = FALSE)
-        #         )
-        #     )
+        p <- p %>%
+            plotly::layout(
+                annotations = list(
+                    list(
+                        x           = 1,
+                        y           = 0,
+                        text        = "Sad Bangers",
+                        bordercolor = spotify_colors$dark_green,
+                        font        = list(
+                            color  = spotify_colors$dark_green,
+                            family = "Gotham",
+                            size   = 15
+                        ),
+                        showarrow = FALSE
+                    ),
+                    list(
+                        x           = 1,
+                        y           = 1,
+                        text        = "Happy Bangers",
+                        bordercolor = spotify_colors$dark_green,
+                        font        = list(
+                            color  = spotify_colors$dark_green,
+                            family = "Gotham",
+                            size   = 15
+                        ),
+                        showarrow   = FALSE
+                    ),
+                    list(
+                        x           = 0.1,
+                        y           = 1,
+                        text        = "Happy Ballads",
+                        bordercolor = spotify_colors$dark_green,
+                        font        = list(
+                            color  = spotify_colors$dark_green,
+                            family = "Gotham",
+                            size   = 15
+                        ),
+                        showarrow   = FALSE
+                    ),
+                    list(
+                        x           = 0.07,
+                        y           = 0,
+                        text        = "Sad Ballads",
+                        bordercolor = spotify_colors$dark_green,
+                        font        = list(
+                            color = spotify_colors$dark_green,
+                            font  = "Gotham",
+                            size  = 15
+                        ),
+                        showarrow   = FALSE
+                    )
+                ),
+                legend = list(
+                    bordercolor = spotify_colors$dark_green,
+                    borderwidth = 1,
+                    font        = list(
+                        color = spotify_colors$dark_green,
+                        font  = "Gotham",
+                        size  = 20
+                    ),
+                    x = 1.1,
+                    y = 0.5
+                ), 
+                xaxis  = list(
+                    range    = c(0, 1),
+                    showline = FALSE
+                ), 
+                yaxis  = list(
+                    range    = c(0, 1),
+                    showline = FALSE
+                )
+            )
         
         return(p)
     })
