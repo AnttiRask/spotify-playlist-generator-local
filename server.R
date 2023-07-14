@@ -16,7 +16,6 @@ library(waiter)
 server <- function(input, output, session) {
     
     conflict_prefer("filter", "dplyr")
-    # conflict_prefer("layout", "plotly")
     
     options(httr_oauth_cache = FALSE) # Disable OAuth caching
     
@@ -80,6 +79,75 @@ server <- function(input, output, session) {
         return(my_artists_track_features)
     })
     
+    # Feature per Album ----
+    output$feature_introduction <- renderText({
+        
+        if (input$feature == "acousticness") {
+            return('"A confidence measure from 0.0 to 1.0 of whether the track is acoustic. 1.0 represents high confidence the track is acoustic." -Spotify'
+            )
+        }
+        
+        if (input$feature == "danceability") {
+            return('"Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable." -Spotify')
+        }
+        
+        if (input$feature == "energy") {
+            return('"Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy." -Spotify')
+        }
+        
+        if (input$feature == "instrumentalness") {
+            return('"Predicts whether a track contains no vocals. "Ooh" and "aah" sounds are treated as instrumental in this context. Rap or spoken word tracks are clearly "vocal". The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. Values above 0.5 are intended to represent instrumental tracks, but confidence is higher as the value approaches 1.0." -Spotify')
+        }
+        
+        if (input$feature == "speechiness") {
+            return('"Speechiness detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g. talk show, audio book, poetry), the closer to 1.0 the attribute value. Values above 0.66 describe tracks that are probably made entirely of spoken words. Values between 0.33 and 0.66 describe tracks that may contain both music and speech, either in sections or layered, including such cases as rap music. Values below 0.33 most likely represent music and other non-speech-like tracks." -Spotify')
+        }
+        
+        if (input$feature == "valence") {
+            return('"A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry)." -Spotify')
+        }
+        
+    })
+    
+    output$summary_plot <- renderPlotly({
+        
+        plot1 <- my_album_summary_stats() %>%
+            mutate(label_text = str_glue("{album_name} ({album_release_year})")) %>%
+            filter(feature == input$feature) %>%
+            ggplot(aes(album_number, score, color = artist_name)) + 
+            geom_line(linewidth = 1) +
+            geom_point(aes(text = label_text), size = 2) +
+            labs(
+                color = "Artist",
+                title = str_glue("Average {str_to_title(input$feature)} per Album"),
+                x     = "Album #",
+                y     = NULL
+            ) +
+            scale_color_manual(values = monokai_palette) +
+            theme_spotify()
+        
+        plot1 <- ggplotly(plot1, tooltip = "text")
+        
+        plot1 <- plot1 %>%
+            plotly::layout(
+                legend = list(
+                    font        = list(
+                        color = spotify_colors$dark_green,
+                        font  = "Gotham",
+                        size  = 20
+                    ),
+                    x = 1.05,
+                    y = 0.5
+                ), 
+                xaxis = list(
+                    autorange = TRUE
+                )
+            )
+        
+        return(plot1)
+        
+    })
+    
     # Average Features ----
     output$artists_plot <- renderPlot({
         
@@ -132,15 +200,15 @@ server <- function(input, output, session) {
                 across(where(is.numeric), mean),
                 .by    = c(artist_name, album_release_year, album_name)
             ) %>%
-            # Get rid off the live albums and/or special editions
             filter(
-                liveness < 0.29,
-                str_detect(tolower(album_name), "edition") == FALSE
+                str_detect(tolower(album_name), "commentary version") == FALSE,
+                str_detect(tolower(album_name), "deluxe edition") == FALSE,
+                str_detect(tolower(album_name), "track commentary") == FALSE
             ) %>%
-            mutate(
-                album_number = row_number(),
-                .by = artist_name
-            ) %>%
+            group_by(artist_name) %>%
+            arrange(artist_name, album_release_year, album_name) %>%
+            mutate(album_number = row_number(album_release_year)) %>%
+            ungroup() %>%
             pivot_longer(
                 cols      = !c(artist_name, album_release_year, album_name, album_number),
                 names_to  = "feature",
@@ -154,24 +222,6 @@ server <- function(input, output, session) {
         
     })
     
-    # Feature per Album ----
-    output$summary_plot <- renderPlot({
-        
-        my_album_summary_stats() %>% 
-            filter(feature == input$feature) %>%
-            ggplot(aes(album_number, score, color = artist_name)) + 
-            geom_line(linewidth = 1) +
-            geom_point(size = 4) +
-            labs(
-                color = "Artist",
-                title = str_glue("Average {str_to_title(input$feature)} per Album"),
-                x     = "Album #",
-                y     = NULL
-            ) +
-            scale_color_manual(values = monokai_palette) +
-            theme_spotify()
-    })
-    
     # Mood Quadrants ----
     output$tracks_plot <- renderPlotly({
         
@@ -180,7 +230,7 @@ server <- function(input, output, session) {
         )
         
         # Create a ggplot object
-        p <- top_tracks %>%
+        plot2 <- top_tracks %>%
             select(id, popularity) %>%
             right_join(
                 my_artists_track_features(),
@@ -213,70 +263,17 @@ server <- function(input, output, session) {
             theme(panel.grid.major = element_blank())
         
         # Convert it to a plotly object
-        p <- ggplotly(p, tooltip = "text")
+        plot2 <- ggplotly(plot2, tooltip = "text")
         
-        # Add annotations (quadrant labels) using layout
-        p <- p %>%
+        plot2 <- plot2 %>%
             plotly::layout(
-                annotations = list(
-                    list(
-                        x           = 1,
-                        y           = 0,
-                        text        = "Sad Bangers",
-                        bordercolor = spotify_colors$dark_green,
-                        font        = list(
-                            color  = spotify_colors$dark_green,
-                            family = "Gotham",
-                            size   = 15
-                        ),
-                        showarrow = FALSE
-                    ),
-                    list(
-                        x           = 1,
-                        y           = 1,
-                        text        = "Happy Bangers",
-                        bordercolor = spotify_colors$dark_green,
-                        font        = list(
-                            color  = spotify_colors$dark_green,
-                            family = "Gotham",
-                            size   = 15
-                        ),
-                        showarrow   = FALSE
-                    ),
-                    list(
-                        x           = 0.1,
-                        y           = 1,
-                        text        = "Happy Ballads",
-                        bordercolor = spotify_colors$dark_green,
-                        font        = list(
-                            color  = spotify_colors$dark_green,
-                            family = "Gotham",
-                            size   = 15
-                        ),
-                        showarrow   = FALSE
-                    ),
-                    list(
-                        x           = 0.07,
-                        y           = 0,
-                        text        = "Sad Ballads",
-                        bordercolor = spotify_colors$dark_green,
-                        font        = list(
-                            color = spotify_colors$dark_green,
-                            font  = "Gotham",
-                            size  = 15
-                        ),
-                        showarrow   = FALSE
-                    )
-                ),
                 legend = list(
-                    bordercolor = spotify_colors$dark_green,
-                    borderwidth = 1,
                     font        = list(
                         color = spotify_colors$dark_green,
                         font  = "Gotham",
                         size  = 20
                     ),
-                    x = 1.1,
+                    x = 1.05,
                     y = 0.5
                 ), 
                 xaxis  = list(
@@ -289,7 +286,7 @@ server <- function(input, output, session) {
                 )
             )
         
-        return(p)
+        return(plot2)
     })
     
     # Playlist Generator ----

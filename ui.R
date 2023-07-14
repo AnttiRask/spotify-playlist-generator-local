@@ -54,29 +54,30 @@ fluidPage(
             )
         ),
         
+        # Feature per Album tab
+        tabPanel(
+            "Feature per Album",
+            sidebarPanel(
+                h3("Features:"),
+                selectInput(
+                    "feature",
+                    "Select a feature to view:",
+                    choices  = features,
+                    selected = "acousticness"
+                ),
+                textOutput("feature_introduction")
+            ),
+            mainPanel(
+                plotlyOutput("summary_plot", height = 700)
+            )
+        ),
+        
         # Average Features tab
         tabPanel(
             "Average Features",
             div(
                 class = "plot-center",
                 mainPanel(plotOutput("artists_plot", height = 700)
-                )
-            )
-        ),
-        
-        # Feature per Album tab
-        tabPanel(
-            "Feature per Album",
-            div(
-                class = "plot-center",
-                mainPanel(
-                    plotOutput("summary_plot", height = 700),
-                    selectInput(
-                        "feature",
-                        "Select a feature to view:",
-                        choices  = features,
-                        selected = "energy"
-                    ),
                 )
             )
         ),
