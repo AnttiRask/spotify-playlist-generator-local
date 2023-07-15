@@ -85,35 +85,61 @@ fluidPage(
         # Mood Quadrants tab
         tabPanel(
             "Mood Quadrants",
-            div(
-                class = "plot-center",
-                mainPanel(plotlyOutput("tracks_plot", height = 700)
+            sidebarPanel(
+                h3("Features:"),
+                selectInput(
+                    "x_var",
+                    "X Axis (Horizontal):",
+                    choices  = features,
+                    selected = "energy"
+                ),
+                selectInput(
+                    "y_var",
+                    "Y Axis (Vertical):",
+                    choices  = features,
+                    selected = "valence"
                 )
+            ),
+            mainPanel(plotlyOutput("tracks_plot", height = 700)
             )
         ),
         
         # Playlist Generator tab
         tabPanel(
             "Playlist Generator",
-            sidebarPanel(
-                h3("Input:"),
-                br(),
-                textInput("user_id", "Spotify Username: ", ""),
-                numericInput("num_top_artists", "Number of top artists (1-5):", min = 1, max = 5, value = 5),
-                textInput("playlist_name", "Playlist Name: "),
-                hr(),
-                h4("Targets:"),
-                sliderInput("acousticness", "Acousticness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
-                sliderInput("danceability", "Danceability (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
-                sliderInput("energy", "Energy (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
-                sliderInput("instrumentalness", "Instrumentalness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
-                sliderInput("speechiness", "Speechiness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
-                sliderInput("valence", "Valence (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
-                br(),
-                actionButton("generate", "Generate Playlist")
-            ),
-            mainPanel(
-                uiOutput("playlist_link")
+            fluidPage(
+                fluidRow(
+                    column(4,
+                           h3("Input:"),
+                           br(),
+                    ),
+                    column(8,
+                           h3("Targets:"),
+                           br()
+                    ),
+                    column(3,
+                           textInput("user_id", "Spotify Username: ", ""),
+                           numericInput("num_top_artists", "Number of top artists (1-5):", min = 1, max = 5, value = 5),
+                           textInput("playlist_name", "Playlist Name: "),
+                           br(),
+                           actionButton("generate", "Generate Playlist")
+                    ),
+                    column(4,
+                           offset = 1,
+                           sliderInput("acousticness", "Acousticness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
+                           sliderInput("danceability", "Danceability (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
+                           sliderInput("energy", "Energy (0-1):", min = 0, max = 1, value = 0.5, step = 0.1)
+                    ),
+                    column(4,
+                           sliderInput("instrumentalness", "Instrumentalness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
+                           sliderInput("speechiness", "Speechiness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
+                           sliderInput("valence", "Valence (0-1):", min = 0, max = 1, value = 0.5, step = 0.1)
+                    ),
+                    column(12,
+                           br(),
+                           uiOutput("playlist_link")
+                    )
+                )
             )
         )
     )

@@ -79,6 +79,35 @@ server <- function(input, output, session) {
         return(my_artists_track_features)
     })
     
+    my_album_summary_stats <- reactive({
+        
+        my_album_summary_stats <- my_artists_track_features() %>%
+            summarise(
+                across(where(is.numeric), mean),
+                .by    = c(artist_name, album_release_year, album_name)
+            ) %>%
+            filter(
+                str_detect(tolower(album_name), "commentary version") == FALSE,
+                str_detect(tolower(album_name), "deluxe edition") == FALSE,
+                str_detect(tolower(album_name), "track commentary") == FALSE
+            ) %>%
+            group_by(artist_name) %>%
+            arrange(artist_name, album_release_year, album_name) %>%
+            mutate(album_number = row_number(album_release_year)) %>%
+            ungroup() %>%
+            pivot_longer(
+                cols      = !c(artist_name, album_release_year, album_name, album_number),
+                names_to  = "feature",
+                values_to = "score"
+            ) %>%
+            filter(
+                feature %in% features
+            )
+        
+        return(my_album_summary_stats)
+        
+    })
+    
     # Feature per Album ----
     output$feature_introduction <- renderText({
         
@@ -193,37 +222,21 @@ server <- function(input, output, session) {
             )
     })
     
-    my_album_summary_stats <- reactive({
-        
-        my_album_summary_stats <- my_artists_track_features() %>%
-            summarise(
-                across(where(is.numeric), mean),
-                .by    = c(artist_name, album_release_year, album_name)
-            ) %>%
-            filter(
-                str_detect(tolower(album_name), "commentary version") == FALSE,
-                str_detect(tolower(album_name), "deluxe edition") == FALSE,
-                str_detect(tolower(album_name), "track commentary") == FALSE
-            ) %>%
-            group_by(artist_name) %>%
-            arrange(artist_name, album_release_year, album_name) %>%
-            mutate(album_number = row_number(album_release_year)) %>%
-            ungroup() %>%
-            pivot_longer(
-                cols      = !c(artist_name, album_release_year, album_name, album_number),
-                names_to  = "feature",
-                values_to = "score"
-            ) %>%
-            filter(
-                feature %in% features
+    # Mood Quadrants ----
+    observe({
+        if (!is.null(input$x_var)) {
+            # Update y_var choices when x_var changes
+            updateSelectInput(
+                session, "y_var",
+                choices  = setdiff(features, input$x_var),
+                selected = "valence"
             )
-        
-        return(my_album_summary_stats)
-        
+        }
     })
     
-    # Mood Quadrants ----
     output$tracks_plot <- renderPlotly({
+        
+        req(input$x_var, input$y_var)
         
         top_tracks <- bind_rows(
             map(unique(my_artists_track_features()$artist_id), get_artist_top_tracks)
@@ -244,19 +257,19 @@ server <- function(input, output, session) {
                 label_text = str_glue(
                     "{track_name}
                     from {album_name} ({album_release_year})
-                    Energy: {round(energy, 2)}
-                    Valence: {round(valence, 2)}"
+                    {str_to_title(input$x_var)}: {round(.data[[input$x_var]], 2)}
+                    {str_to_title(input$y_var)}: {round(.data[[input$y_var]], 2)}"
                 )
             ) %>%
-            ggplot(aes(energy, valence, color = artist_name)) +
+            ggplot(aes(.data[[input$x_var]], .data[[input$y_var]], color = artist_name)) +
             geom_point(aes(text = label_text), alpha = 0.9) +
             geom_hline(yintercept = 0.5,  color = "grey", linetype = "dashed") +
             geom_vline(xintercept = 0.5,  color = "grey", linetype = "dashed") +
             labs(
-                x     = "Energy",
-                y     = "Valence",
+                x     = str_to_title(input$x_var),
+                y     = str_to_title(input$y_var),
                 color = "Artist",
-                title = "Songs mood"
+                title = "Mood Quadrants"
             ) +
             scale_color_manual(values = monokai_palette) +
             theme_spotify() +
