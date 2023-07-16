@@ -47,3 +47,8 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# renv folders
+renv/library/
+renv/staging/
+
