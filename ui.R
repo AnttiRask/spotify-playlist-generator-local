@@ -135,11 +135,12 @@ fluidPage(
             "Playlist Generator",
             fluidPage(
                 fluidRow(
-                    column(4,
+                    column(3,
                            h3("Input:"),
                            br(),
                     ),
                     column(8,
+                           offset = 1,
                            h3("Targets:"),
                            br()
                     ),
@@ -155,7 +156,7 @@ fluidPage(
                            actionButton("generate", "Generate Playlist")
                     ),
                     column(4,
-                           # offset = 1,
+                           offset = 1,
                            
                            # User inputs for target feature values
                            sliderInput("acousticness", "Acousticness (0-1):", min = 0, max = 1, value = 0.5, step = 0.1),
