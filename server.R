@@ -1,6 +1,7 @@
 # Load packages
 library(conflicted)
 library(dplyr)
+library(extrafont)
 library(forcats)
 library(ggplot2)
 library(plotly)
