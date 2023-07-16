@@ -62,7 +62,7 @@ fluidPage(
                 h6("Step 1: Login to ", tags$a(href = "https://developer.spotify.com/dashboard/", "https://developer.spotify.com/dashboard/"), " with your Spotify credentials"),
                 h6("Step 2: 'Create' a temp app (the Redirect URIs needs to be http://localhost:1410/)"),
                 h6("Step 3: In the app Settings, find the Client ID and Client Secret. Copy and paste them into the input boxes on the left with your Spotify username and click Validate"),
-                h6("Step 4: Allow spotify to authenticate your account"),
+                h6("Step 4: Allow Spotify to authenticate your account"),
                 br(),
                 h6("You should be good to go! Click any of the tabs above to get started."),
             )
