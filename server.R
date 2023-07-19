@@ -229,7 +229,7 @@ server <- function(input, output, session) {
                     linetype  = 2
                 ),
                 panel.grid.major.y = element_blank(),
-                panel.grid.minor   = element_blank(),
+                panel.grid.minor   = element_blank()
             )
     })
     
