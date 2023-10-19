@@ -1,16 +1,16 @@
 # Load necessary packages
-library(conflicted)
-library(dplyr)
-library(extrafont)
-library(forcats)
-library(ggplot2)
-library(plotly)
-library(purrr)
-library(shinydashboard)
-library(spotifyr)
-library(stringr)
-library(tidyr)
-library(waiter)
+library(conflicted)     # An Alternative Conflict Resolution Strategy
+library(dplyr)          # A Grammar of Data Manipulation
+library(extrafont)      # Tools for Using Fonts
+library(forcats)        # Tools for Working with Categorical Variables (Factors)
+library(ggplot2)        # Create Elegant Data Visualisations Using the Grammar of Graphics
+library(plotly)         # Create Interactive Web Graphics via 'plotly.js'
+library(purrr)          # Functional Programming Tools
+library(shinydashboard) # Create Dashboards with 'Shiny'
+library(spotifyr)       # R Wrapper for the 'Spotify' Web API
+library(stringr)        # Simple, Consistent Wrappers for Common String Operations
+library(tidyr)          # Tidy Messy Data
+library(waiter)         # Loading Screen for 'Shiny'
 
 # Define the server function
 server <- function(input, output, session) {
@@ -365,3 +365,4 @@ server <- function(input, output, session) {
         Sys.unsetenv("SPOTIFY_CLIENT_SECRET")
     })
 }
+
