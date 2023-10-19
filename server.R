@@ -205,7 +205,7 @@ server <- function(input, output, session) {
             coord_flip() +
             labs(
                 color = "Artist",
-                title = "Average Values of Different Features (0-1)",
+                title = "Average Values (0-1) of Different Features",
                 x     = NULL,
                 y     = NULL
             ) +
