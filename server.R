@@ -170,7 +170,7 @@ server <- function(input, output, session) {
         plot1 <- plot1 %>%
             plotly::layout(
                 legend = list(
-                    font        = list(
+                    font = list(
                         color = spotify_colors$dark_green,
                         font  = "Gotham",
                         size  = 20
@@ -187,7 +187,7 @@ server <- function(input, output, session) {
         
     })
     
-    # Define reactive expression to create artist feature plot
+    # Define reactive expression to create an artist feature plot
     output$artists_plot <- renderPlot({
         
         # Create ggplot to show average values of different features per artist
