@@ -1,4 +1,4 @@
-# Spotify: Favorite Artist Analyzer and Playlist Generator :musical_notes:
+# Spotify: Favorite Artist Analyzer and Playlist Generator :radio:
 
 This app uses the Spotify API to...
 
